@@ -1,0 +1,56 @@
+﻿---
+layout: post
+title: jvm内存溢出检测方法
+date: 2018-04-11 00:00:00
+tags: 内存溢出
+---
+参考链接如下：
+
+* [jmap -histo pid输出的字符含义][1]{:target="_blank"}
+* [JProfiler入门教程][2]{:target="_blank"}
+* [使用jmap和MAT分析JVM堆内存][3]{:target="_blank"}
+* [linux下java内存泄露定位jstat+jmap+jhat][4]{:target="_blank"}
+
+## jmap查看实例的数量
+    
+    //to print histogram of java object heap; if the "live" suboption is specified, only count live objects
+    jmap -histo[:live] [PID] > [POSITION]
+    或
+    //查看前面NUM个实例的情况
+    jmap -histo [PID] | head -[NUM]
+
+![2018-04-11][5]
+
+其中[C is a char[]
+
+[S is a short[]
+
+[I is a int[]
+
+[B is a byte[]
+
+[[I is a int[][]
+
+constMethodKlass/methodKlass/constantPoolKlass/constantPoolCacheKlass/instanceKlassKlass/methodDataKlass与Classloader相关，常驻与Perm区。（Perm区，Permanent Generation space，是指内存的永久保存区域。主要存放静态的类信息和方法信息，静态的方法和变量，final标注的常量信息等。）
+
+## jmap打印heap空间的概要
+    
+    jmap -heap [PID]
+
+![2018-04-11][6]
+
+## jmap生成heap dump
+
+    jmap -dump:live,file=[filePath] [PID] 
+
+生成的dump文件，可以利用eclipse插件[MAT][7]{:target="_blank"}来分析heap profile，或者[JProfiler][8]{:target="_blank"}工具，或者通过linux命令jhat dumpfile。
+
+
+  [1]: https://blog.csdn.net/lxb_champagne/article/details/18352945
+  [2]: https://wenku.baidu.com/view/183c782f0722192e4536f631.html
+  [3]: https://blog.csdn.net/alli0968/article/details/52460008
+  [4]: https://blog.csdn.net/javascript_2011/article/details/44085351
+  [5]: /images/posts/2018-04-11//1.png
+  [6]: /images/posts/2018-04-11//2.png
+  [7]: https://jingyan.baidu.com/article/cb5d61053562ed005c2fe022.html
+  [8]: https://jprofiler.en.softonic.com/

@@ -1,0 +1,112 @@
+﻿---
+layout: post
+title: 常见的 POST 提交数据方式
+date: 2018-05-02 00:00:00
+tags: http
+---
+由于最近对Post请求方式产生了混乱，所以对有关post方式进行整理。
+
+原文链接：
+
+[四种常见的 POST 提交数据方式][1]{:target="_blank"}
+
+[Apache HttpClient Quick Start][2]{:target="_blank"}
+
+## 1) 介绍四种Content-type
+### application/x-www-form-urlencoded
+最常见的 POST 提交数据的方式，浏览器的原生 form 表单。如果不设置 enctype 属性，那么最终就会以 application/x-www-form-urlencoded 方式提交数据。
+
+```
+    POST http://www.example.com HTTP/1.1
+    Content-Type: application/x-www-form-urlencoded;charset=utf-8
+    
+    name=vv&password=**
+```
+我们用 Ajax 提交数据时，也是使用这种方式。例如 JQuery 和 QWrap 的 Ajax，Content-Type 默认值都是「application/x-www-form-urlencoded;charset=utf-8」
+
+### multipart/form-data
+我们使用表单上传文件时，必须让 form 的 enctyped 等于这个值。
+
+### application/json
+用来告诉服务端消息主体是序列化后的 JSON 字符串
+
+```
+    POST http://www.example.com HTTP/1.1
+    Content-Type: application/json;charset=utf-8
+    
+    {"title":"test","sub":[1,2,3]}
+```
+
+### text/xml
+略
+
+## 2) JAVA请求方式
+### http get
+
+```
+    CloseableHttpClient httpclient = HttpClients.createDefault();
+    HttpGet httpGet = new HttpGet("http://targethost/homepage");
+    CloseableHttpResponse response1 = httpclient.execute(httpGet);
+    try {
+        System.out.println(response1.getStatusLine());
+        HttpEntity entity1 = response1.getEntity();
+        // do something useful with the response body
+        // and ensure it is fully consumed
+        EntityUtils.consume(entity1);
+    } finally {
+        response1.close();
+    }
+```
+
+### http post
+1）application/x-www-form-urlencoded
+
+```
+    HttpPost httpPost = new HttpPost("http://targethost/login");
+    List <NameValuePair> nvps = new ArrayList <NameValuePair>();
+    nvps.add(new BasicNameValuePair("username", "vip"));
+    nvps.add(new BasicNameValuePair("password", "secret"));
+    httpPost.setEntity(new UrlEncodedFormEntity(nvps));
+    CloseableHttpResponse response2 = httpclient.execute(httpPost);
+    
+    try {
+        System.out.println(response2.getStatusLine());
+        HttpEntity entity2 = response2.getEntity();
+        // do something useful with the response body
+        // and ensure it is fully consumed
+        EntityUtils.consume(entity2);
+    } finally {
+        response2.close();
+    }
+```
+
+查看源码,可以知道其字符集默认是ISO_8859_1,内容类型为application/x-www-form-urlencoded
+
+```
+    public UrlEncodedFormEntity (final Iterable <? extends NameValuePair> parameters,final Charset charset) {
+        super(URLEncodedUtils.format(parameters,
+                charset != null ? charset : HTTP.DEF_CONTENT_CHARSET),
+                ContentType.create(URLEncodedUtils.CONTENT_TYPE, charset));
+    }
+```
+
+2）application/json
+
+```
+    CloseableHttpClient httpclient = HttpClients.createDefault();
+    HttpPost post = new HttpPost("http://targethost/login");
+    JSONObject json = new JSONObject();
+	json.put("username", "vip");
+	json.put("password", "secret");
+	httpPost.addHeader("Content-Type", "application/json");
+	post.setEntity(new StringEntity(json.toJSONString(),Charset.forName("UTF-8")));
+    try {
+    	HttpResponse response = httpclient.execute(post);
+		HttpEntity entity1 = response.getEntity();
+		String result = EntityUtils.toString(entity1);
+		System.out.println("Response content: " + result);
+	}...
+```
+
+  [1]: http://www.cnblogs.com/aaronjs/p/4165049.html
+  [2]: http://hc.apache.org/httpcomponents-client-ga/quickstart.html
